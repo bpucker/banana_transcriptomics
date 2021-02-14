@@ -62,7 +62,7 @@ def compare_candidates_against_all( candidate, gene_expression, r_cut, p_cut, mi
 				except KeyError:
 					print tissue
 			r, p = stats.spearmanr( values )
-			if not math.isnan( r ) and total_expression > min_exp
+			if not math.isnan( r ) and total_expression > min_exp:
 				if abs( r ) > r_cut and p < p_cut:
 					coexpressed_genes.append( { 'id': gene2, 'correlation': r, 'p_value': p } )
 		
