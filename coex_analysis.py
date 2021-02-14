@@ -10,9 +10,9 @@ __usage__ = """
 					--candidates <CANDIDATE_GENE_FILE>
 					
 					optional:
-					--minexp <MINIMAL_EXPRESSION_PER_GENE>
-					--r <MIN_CORRELATION_COEFFICIENT>
-					--p <MAX_P_VALUE>
+					--minexp <MINIMAL_EXPRESSION_PER_GENE>[10]
+					--r <MIN_CORRELATION_COEFFICIENT>[0.7]
+					--p <MAX_P_VALUE>[0.05]
 					
 					bug reports and feature requests: bpucker@cebitec.uni-bielefeld.de
 					"""
