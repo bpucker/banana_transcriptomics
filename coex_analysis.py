@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### bpucker@cebitec.uni-bielefeld.de ###
-### v0.11 ###
+### v0.2 ###
 
 __usage__ = """
 					python coex_analysis.py
@@ -8,6 +8,11 @@ __usage__ = """
 					--anno <ANNOTATION_FILE>
 					--out <OUTPUT_FOLDER>
 					--candidates <CANDIDATE_GENE_FILE>
+					
+					optional:
+					--minexp <MINIMAL_EXPRESSION_PER_GENE>
+					--r <MIN_CORRELATION_COEFFICIENT>
+					--p <MAX_P_VALUE>
 					
 					bug reports and feature requests: bpucker@cebitec.uni-bielefeld.de
 					"""
@@ -24,8 +29,10 @@ def load_expression_values( filename ):
 	
 	expression_data = {}
 	with open( filename, "r" ) as f:
-		tissues = f.readline().strip().split('\t')[1:]
+		tissues = f.readline().strip().split('\t')
 		line = f.readline()
+		if len( line.strip().split('\t') ) > len( tissues ):	#no header of the first column present
+			tissues = tissues[1:]
 		while line:
 			parts = line.strip().split('\t')
 			expression = {}
@@ -36,7 +43,7 @@ def load_expression_values( filename ):
 	return expression_data
 
 
-def compare_candidates_against_all( candidate, gene_expression ):
+def compare_candidates_against_all( candidate, gene_expression, r_cut, p_cut, min_exp ):
 	"""! @brief compare candidate gene expression against all genes to find co-expressed genes """
 	
 	tissues = sorted( gene_expression[ gene_expression.keys()[0] ].keys() )
@@ -55,8 +62,8 @@ def compare_candidates_against_all( candidate, gene_expression ):
 				except KeyError:
 					print tissue
 			r, p = stats.spearmanr( values )
-			if not math.isnan( r ) and total_expression > 10:
-				if r > 0.7 and p < 0.05:
+			if not math.isnan( r ) and total_expression > min_exp
+				if abs( r ) > r_cut and p < p_cut:
 					coexpressed_genes.append( { 'id': gene2, 'correlation': r, 'p_value': p } )
 		
 	return coexpressed_genes
@@ -85,6 +92,21 @@ def main( arguments ):
 	output_prefix = arguments[ arguments.index('--out')+1 ]
 	candidate_gene_file = arguments[ arguments.index('--candidates')+1 ]
 	
+	if '--r' in arguments:
+		r_cut = float( arguments[ arguments.index('--r')+1 ] )
+	else:
+		r_cut = 0.7
+	
+	if '--p' in arguments:
+		p_cut = float( arguments[ arguments.index('--p')+1 ] )
+	else:
+		p_cut = 0.05
+	
+	if '--minexp' in arguments:
+		min_exp = float( arguments[ arguments.index('--minexp')+1 ] )
+	else:
+		min_exp=10.0
+	
 	if not os.path.exists( output_prefix ):
 		os.makedirs( output_prefix )
 	else:
@@ -110,7 +132,16 @@ def main( arguments ):
 		if not os.path.isfile( coexpression_output_file ):
 			with open( coexpression_output_file, "w", 0 ) as out:
 				print str( x+1 ) + "/" + str( len( high_impact_candidates ) )
-				coexpressed_genes = sorted( compare_candidates_against_all( candidate, gene_expression ), key=itemgetter( 'correlation' ) )[::-1]
+				coexp_values = compare_candidates_against_all( candidate, gene_expression, r_cut, p_cut, min_exp )
+				pos_cor_vals = []
+				neg_cor_vals = []
+				for val in coexp_values:
+					if val['correlation'] > 0:
+						pos_cor_vals.append( val )
+					else:
+						neg_cor_vals.append( val )
+				coexpressed_genes = sorted( pos_cor_vals, key=itemgetter( 'correlation' ) )[::-1] + sorted( neg_cor_vals, key=itemgetter( 'correlation' ) )[::-1]
+				
 				out.write( 'CandidateGene\tGeneID\tSpearmanCorrelation\tadjusted_p-value\tFunctionalAnnotation\n' )
 				for entry in coexpressed_genes:
 					try:
