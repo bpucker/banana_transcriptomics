@@ -59,4 +59,5 @@ Mandatory:
 
 ### References ###
 
+Busche M., Pucker B., Weisshaar B., and Stracke R. (2022). Three R2R3-MYB transcription factors from banana (Musa spp.) activate structural anthocyanin biosynthesis genes as part of an MBW complex. bioRxiv 2022.08.15.503939; doi:[10.1101/2022.08.15.503939](https://doi.org/10.1101/2022.08.15.503939)
 
